@@ -1,0 +1,55 @@
+import 'package:flutter/material.dart';
+import '../../domain/models/person.dart';
+import '../../domain/services/care_engine.dart';
+import '../../domain/services/vaccination_engine.dart';
+import '../../core/utils/jalali_utils.dart';
+
+class PersonDetailScreen extends StatelessWidget {
+  final Person person;
+  const PersonDetailScreen({super.key, required this.person});
+
+  @override
+  Widget build(BuildContext context) {
+    final ageStr = JalaliUtils.formatAge(person.birthYear, person.birthMonth, person.birthDay);
+    final cares = CareEngine.getUpcomingCares(person);
+    final vaccines = VaccinationEngine.getUpcomingVaccines(person);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('${person.firstName} ${person.lastName}')),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          Card(
+            color: Colors.teal.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('سن دقیق: $ageStr', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text('جنسیت: ${person.gender}'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text('مراقبت‌های سلامت پیش رو:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ...cares.map((c) => ListTile(
+            leading: Icon(Icons.favorite, color: c.isHighPriority ? Colors.red : Colors.teal),
+            title: Text(c.title),
+            subtitle: Text(c.timeText),
+          )),
+          const SizedBox(height: 24),
+          const Text('برنامه واکسیناسیون:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          if (vaccines.isEmpty) const Padding(padding: EdgeInsets.all(16.0), child: Text('واکسن پیش‌بینی‌شده‌ای در حال حاضر وجود ندارد.')),
+          ...vaccines.map((v) => ListTile(
+            leading: const Icon(Icons.vaccines, color: Colors.blue),
+            title: Text(v.title),
+            subtitle: Text(v.dueAge),
+          )),
+        ],
+      ),
+    );
+  }
+}
